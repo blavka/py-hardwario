@@ -70,3 +70,60 @@ jobs:
           sed -r -i'' "s/\"1\.0\.0\"/\"$RELEASE_VERSION\"/g" pyproject.toml
           sed -r -i'' "s/'1\.0\.0'/'$RELEASE_VERSION'/g" src/hardwario/hardwario/__init__.py
           poetry publish --build
+
+  build:
+    name: Build packages
+    needs: test_build
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            TARGET: ubuntu-22.04
+            CMD_BUILD: poetry run pyinstaller -F -w -n hardwario cli.py
+          - os: macos-latest
+            TARGET: macos
+            CMD_BUILD: >
+                poetry run pyinstaller -F -w -n hardwario cli.py &&
+                cd dist/ &&
+                zip -r9 hardwario hardwario.app/
+            OUT_FILE_NAME: hardwario.zip
+            ASSET_MIME: application/zip
+          - os: windows-latest
+            TARGET: windows
+            CMD_BUILD: poetry run pyinstaller -F -w -n hardwario cli.py
+            OUT_FILE_NAME: hardwario.exe
+            ASSET_MIME: application/vnd.microsoft.portable-executable
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Build with pyinstaller for ${{matrix.TARGET}}
+      run: ${{matrix.CMD_BUILD}}
+    - name: Load Release URL File from release job
+      uses: actions/download-artifact@v1
+      with:
+        name: release_url
+    - name: Get Release File Name & Upload URL
+      id: get_release_info
+      shell: bash
+      run: |
+        value=`cat release_url/release_url.txt`
+        echo ::set-output name=upload_url::$value
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
+        asset_name: ${{ matrix.OUT_FILE_NAME}}
+        asset_content_type: ${{ matrix.ASSET_MIME}}
