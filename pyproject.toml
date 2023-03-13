@@ -22,31 +22,38 @@ classifiers = [
     "Environment :: Console"
 ]
 
-packages = [
-    { include = "hardwario", from = "src" },
-]
-
-exclude = [
-    "**/*.pyc",
-    "**/*.pyi",
-]
-
-include = [
-    "LICENSE",
-]
-
 [tool.poetry.dependencies]
-python = ">=3.7, <4"
+python = ">=3.7, <3.11"
 hardwario-chester = ">=v1.25.0"
 hardwario-cloud = ">=1.5.0"
+pyinstaller = "^4.8.0"
 
 [tool.poetry.dev-dependencies]
-#hardwario-common = {path = "../py-hardwario-common", develop = true}
-#hardwario-chester = {path = "../py-hardwario-chester", develop = true}
-#hardwario-cloud = {path = "../py-hardwario-cloud", develop = true}
-#hardwario-tower = {path = "../py-hardwario-tower", develop = true}
 pycodestyle = "^2.10.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyinstaller]
+# Include packages and files
+# NOTE: Replace `my_script.py` with the actual name of your main script
+# NOTE: Replace `my_package` with the actual name of your package
+# NOTE: Replace `my_icon.ico` with the actual name of your icon file (optional)
+# NOTE: Replace `my_app_name` with the actual name of your application
+name = "hardwario"
+onefile = true
+console = true
+# icon = "hardwario.ico"
+# add_data = "src/hardwario/data_file.txt:hardwario/"
+# hidden_imports = ["my_package.sub_module"]
+
+[tool.pyinstaller.darwin]
+name = "hardwario"
+iconfile = "hardwario.icns"
+
+[tool.pyinstaller.linux]
+# Linux specific options
+
+[tool.pyinstaller.win32]
+# Windows specific options
