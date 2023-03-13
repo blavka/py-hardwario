@@ -23,6 +23,8 @@ jobs:
           - os: ubuntu-latest
             TARGET: ubuntu-latest
             CMD_BUILD: poetry run pyinstaller -F -w -n hardwario cli.py
+            OUT_FILE_NAME: hardwario
+            ASSET_MIME: application/octet-stream
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
@@ -49,23 +51,14 @@ jobs:
         poetry install
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
-    - name: Load Release URL File from release job
-      uses: actions/download-artifact@v1
-      with:
-        name: release_url
-    - name: Get Release File Name & Upload URL
-      id: get_release_info
-      shell: bash
-      run: |
-        value=`cat release_url/release_url.txt`
-        echo ::set-output name=upload_url::$value
+
     - name: Upload Release Asset
       id: upload-release-asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
         asset_name: ${{ matrix.OUT_FILE_NAME}}
         asset_content_type: ${{ matrix.ASSET_MIME}}
